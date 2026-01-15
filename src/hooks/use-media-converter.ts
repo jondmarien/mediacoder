@@ -4,7 +4,14 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useAsyncQueuer } from "@tanstack/react-pacer";
 import { toast } from "sonner";
 import { uploadAndProcessImage, uploadAndProcessVideo } from "@/app/actions";
-import { ImageConversionOptions, VideoConversionOptions } from "@/lib/schemas";
+import {
+  ImageConversionOptions,
+  VideoConversionOptions,
+  MAX_IMAGE_SIZE,
+  MAX_VIDEO_SIZE,
+  ACCEPTED_IMAGE_TYPES,
+  ACCEPTED_VIDEO_TYPES,
+} from "@/lib/schemas";
 import { ProcessedFile } from "@/lib/types";
 
 export function useMediaConverter() {
@@ -104,7 +111,37 @@ export function useMediaConverter() {
 
   const addFiles = useCallback(
     (newFiles: File[]) => {
-      const processedFiles = newFiles.map((file) => ({
+      const validFiles: File[] = [];
+
+      newFiles.forEach((file) => {
+        const isVideo = file.type.startsWith("video");
+
+        if (isVideo) {
+          if (
+            !ACCEPTED_VIDEO_TYPES.includes(file.type) &&
+            !file.type.endsWith("mkv")
+          ) {
+            // TODO:mkv often has inconsistent mime types in browser
+            // Relaxed check for video types or add logic
+          }
+          if (file.size > MAX_VIDEO_SIZE) {
+            toast.error(`File ${file.name} exceeds 100MB limit.`);
+            return;
+          }
+        } else {
+          // Strict check for images
+          if (file.size > MAX_IMAGE_SIZE) {
+            toast.error(`File ${file.name} exceeds 20MB limit.`);
+            return;
+          }
+        }
+
+        validFiles.push(file);
+      });
+
+      if (validFiles.length === 0) return;
+
+      const processedFiles = validFiles.map((file) => ({
         file,
         status: "pending" as const,
         id: Math.random().toString(36).substring(7),

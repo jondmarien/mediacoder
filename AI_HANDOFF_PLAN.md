@@ -64,11 +64,11 @@
 2.  **Server Config**: Ensure `ffmpeg` binary is available in the environment or use a buildpack if deploying to Vercel (or switch to `ffmpeg.wasm`).
 
 ### Phase 3: Development
-1.  Build `UploadZone` with drag-and-drop.
-2.  Implement `ImageConversion` server action using `sharp`.
-3.  Implement `VideoConversion`.
-    *   *Agent Tip*: Start with `fluent-ffmpeg`. If deployment targets Vercel, check limits. `ffmpeg.wasm` might be improved for "serverless" environments by running on client.
-4.  Add Zod schemas for validation (file size, type, settings).
+1.  [x] Build `UploadZone` with drag-and-drop.
+2.  [x] Implement `ImageConversion` server action using `sharp`.
+3.  [x] Implement `VideoConversion`.
+4.  [x] Add Zod schemas for validation (file size, type, settings).
+5.  [x] Implement client-side validation in `useMediaConverter`.
 
 ### Phase 4: UI Polish
 1.  Apply "Premium" aesthetics: Dark mode, glassmorphism, smooth animations (`framer-motion` or CSS).

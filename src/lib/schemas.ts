@@ -22,3 +22,21 @@ export const VideoConversionSchema = z.object({
 
 export type ImageConversionOptions = z.infer<typeof ImageConversionSchema>;
 export type VideoConversionOptions = z.infer<typeof VideoConversionSchema>;
+
+export const MAX_IMAGE_SIZE = 20 * 1024 * 1024; // 20MB
+export const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+
+export const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+  "image/tiff",
+];
+export const ACCEPTED_VIDEO_TYPES = [
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+  "video/x-msvideo",
+  "video/x-matroska",
+];
