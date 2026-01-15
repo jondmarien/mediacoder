@@ -4,6 +4,11 @@ import { processImage, ImageProcessOptions } from "@/lib/image-processing";
 import { v4 as uuidv4 } from "uuid";
 import { AsyncRateLimiter } from "@tanstack/pacer";
 import { z } from "zod";
+import { writeFile, readFile, unlink, mkdir } from "fs/promises";
+import { join } from "path";
+import { tmpdir } from "os";
+import * as fs from "fs";
+import { convertVideo } from "@/lib/ffmpeg-helper";
 
 // Rate limiter wrapper for the processing function
 const rateLimitedProcessor = new AsyncRateLimiter(
@@ -102,6 +107,101 @@ export async function uploadAndProcessImage(formData: FormData) {
   }
 }
 
-export async function processVideoUpload(formData: FormData) {
-  return { success: true, message: "Video processing implementation pending" };
+// --- Video Processing ---
+
+const VideoUploadSchema = z.object({
+  format: z.enum(["mp4", "webm", "mov", "avi", "mkv"]),
+  codec: z.string().optional(),
+  // Add more video specific options here (bitrate, etc.)
+});
+
+export async function uploadAndProcessVideo(formData: FormData) {
+  let inputPath = "";
+  let outputPath = "";
+
+  try {
+    const file = formData.get("file") as File;
+    if (!file) throw new Error("No file uploaded");
+
+    // Validation
+    const rawData = {
+      format: formData.get("format") || "mp4",
+      codec: formData.get("codec") || undefined,
+    };
+    const validatedData = VideoUploadSchema.parse(rawData);
+
+    if (file.size > 100 * 1024 * 1024) {
+      // 100MB limit for video
+      throw new Error("File size exceeds 100MB video limit");
+    }
+
+    // Temp file handling
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const tempDir = join(tmpdir(), "mediacoder-uploads");
+
+    // Ensure temp dir exists
+    if (!fs.existsSync(tempDir)) {
+      await mkdir(tempDir, { recursive: true });
+    }
+
+    const uniqueId = uuidv4();
+    inputPath = join(tempDir, `${uniqueId}-input`); // Append extension if needed by ffmpeg detection, but fluent-ffmpeg usually detects
+    // Actually best to keep extension for ffmpeg detection
+    const originalName = file.name;
+    const ext = originalName.split(".").pop() || "dat";
+    inputPath = `${inputPath}.${ext}`;
+
+    outputPath = join(tempDir, `${uniqueId}-output.${validatedData.format}`);
+
+    await writeFile(inputPath, buffer);
+
+    // Process
+    await convertVideo({
+      inputPath,
+      outputPath,
+      format: validatedData.format,
+      codec: validatedData.codec,
+    });
+
+    // Read result
+    const outputBuffer = await readFile(outputPath);
+
+    // Cleanup (async, don't wait)
+    cleanupFiles([inputPath, outputPath]);
+
+    return {
+      success: true,
+      data: `data:video/${validatedData.format};base64,${outputBuffer.toString(
+        "base64"
+      )}`,
+      filename: `processed-${uniqueId}.${validatedData.format}`,
+    };
+  } catch (error) {
+    // Cleanup on error too
+    if (inputPath) cleanupFiles([inputPath]);
+    if (outputPath) cleanupFiles([outputPath]);
+
+    console.error("Video processing failed:", error);
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: "Validation failed",
+        details: error.issues,
+      };
+    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to process video",
+    };
+  }
+}
+
+async function cleanupFiles(paths: string[]) {
+  for (const path of paths) {
+    try {
+      if (fs.existsSync(path)) await unlink(path);
+    } catch (e) {
+      console.error(`Failed to cleanup ${path}`, e);
+    }
+  }
 }

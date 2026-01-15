@@ -16,8 +16,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { uploadAndProcessImage } from "@/app/actions";
-
+import { uploadAndProcessImage, uploadAndProcessVideo } from "@/app/actions";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 interface ProcessedFile {
   file: File;
   status: "pending" | "processing" | "completed" | "error";
@@ -43,11 +44,20 @@ export default function UploadZone() {
 
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("format", "webp"); // Default to webp for now
 
-      const result = await uploadAndProcessImage(formData);
-      if (!result.success) throw new Error(result.error);
-      return result;
+      const isVideo = file.type.startsWith("video");
+
+      if (isVideo) {
+        formData.append("format", "mp4"); // Default video format
+        const result = await uploadAndProcessVideo(formData);
+        if (!result.success) throw new Error(result.error);
+        return result;
+      } else {
+        formData.append("format", "webp"); // Default image format
+        const result = await uploadAndProcessImage(formData);
+        if (!result.success) throw new Error(result.error);
+        return result;
+      }
     },
     {
       concurrency: 2,
@@ -144,68 +154,79 @@ export default function UploadZone() {
       {files.length > 0 && (
         <div className="space-y-4">
           {files.map((file) => (
-            <div
+            <Card
               key={file.id}
-              className="flex items-center justify-between p-4 rounded-xl border bg-card/50 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2"
+              className="group relative overflow-hidden transition-all hover:shadow-md"
             >
-              <div className="flex items-center space-x-4 overflow-hidden">
-                <div className="p-2 bg-muted rounded-lg shrink-0">
-                  {file.file.type.startsWith("video") ? (
-                    <FileVideo className="w-6 h-6" />
-                  ) : (
-                    <FileImage className="w-6 h-6" />
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <p className="font-medium text-sm truncate max-w-[200px] md:max-w-md">
-                    {file.file.name}
-                  </p>
-                  <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                    <span>{(file.file.size / 1024 / 1024).toFixed(2)} MB</span>
-                    <span>•</span>
-                    <span
-                      className={cn(
-                        "capitalize",
-                        file.status === "completed" && "text-green-500",
-                        file.status === "error" && "text-red-500",
-                        file.status === "processing" && "text-blue-500"
-                      )}
-                    >
-                      {file.status}
-                    </span>
+              <CardContent className="flex items-center justify-between p-4">
+                <div className="flex items-center space-x-4 overflow-hidden">
+                  <div className="p-2 bg-muted rounded-lg shrink-0">
+                    {file.file.type.startsWith("video") ? (
+                      <FileVideo className="w-6 h-6" />
+                    ) : (
+                      <FileImage className="w-6 h-6" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate max-w-[200px] md:max-w-md">
+                      {file.file.name}
+                    </p>
+                    <div className="flex items-center space-x-2 text-xs text-muted-foreground mt-1">
+                      <span>
+                        {(file.file.size / 1024 / 1024).toFixed(2)} MB
+                      </span>
+                      <span>•</span>
+                      <Badge
+                        variant={
+                          file.status === "completed"
+                            ? "default"
+                            : file.status === "error"
+                            ? "destructive"
+                            : "secondary"
+                        }
+                        className="text-[10px] h-5 px-1.5 capitalize"
+                      >
+                        {file.status}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex items-center space-x-2">
-                {file.status === "processing" && (
-                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                )}
-                {file.status === "completed" && file.result && (
-                  <Button size="icon" variant="ghost" asChild>
-                    <a
-                      href={file.result}
-                      download={
-                        file.file.name.replace(/\.[^/.]+$/, "") +
-                        "-processed.webp"
-                      }
-                    >
-                      <Download className="w-4 h-4" />
-                    </a>
+                <div className="flex items-center space-x-2">
+                  {file.status === "processing" && (
+                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                  )}
+                  {file.status === "completed" && file.result && (
+                    <Button size="icon" variant="ghost" asChild>
+                      <a
+                        href={file.result}
+                        download={
+                          file.file.name.replace(/\.[^/.]+$/, "") +
+                          "-processed.webp"
+                        }
+                      >
+                        <Download className="w-4 h-4" />
+                      </a>
+                    </Button>
+                  )}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFile(file.id);
+                    }}
+                  >
+                    <X className="w-4 h-4" />
                   </Button>
-                )}
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeFile(file.id);
-                  }}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
+                </div>
+              </CardContent>
+              {file.status === "processing" && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary/10">
+                  <div className="h-full bg-primary animate-progress-indeterminate" />
+                </div>
+              )}
+            </Card>
           ))}
         </div>
       )}
