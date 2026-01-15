@@ -45,8 +45,12 @@ export async function uploadAndProcessImage(formData: FormData) {
       quality: Number(formData.get("quality") || 80),
       width: Number(formData.get("width") || 0) || undefined,
       height: Number(formData.get("height") || 0) || undefined,
-      bgRemoveColor: formData.get("bgRemoveColor") || undefined,
-      bgRemoveThreshold: Number(formData.get("bgRemoveThreshold") || 20),
+      // Logic for background removal parameters
+      bgRemoveColor:
+        formData.get("removeBackground") === "true"
+          ? (formData.get("targetColor") as string)
+          : undefined,
+      bgRemoveThreshold: Number(formData.get("threshold") || 10),
     };
 
     const validatedData = ImageUploadSchema.parse(rawData);
@@ -112,6 +116,7 @@ export async function uploadAndProcessImage(formData: FormData) {
 const VideoUploadSchema = z.object({
   format: z.enum(["mp4", "webm", "mov", "avi", "mkv"]),
   codec: z.string().optional(),
+  muteAudio: z.boolean().default(false),
   // Add more video specific options here (bitrate, etc.)
 });
 
@@ -127,6 +132,7 @@ export async function uploadAndProcessVideo(formData: FormData) {
     const rawData = {
       format: formData.get("format") || "mp4",
       codec: formData.get("codec") || undefined,
+      muteAudio: formData.get("muteAudio") === "true",
     };
     const validatedData = VideoUploadSchema.parse(rawData);
 
@@ -161,6 +167,7 @@ export async function uploadAndProcessVideo(formData: FormData) {
       outputPath,
       format: validatedData.format,
       codec: validatedData.codec,
+      muteAudio: validatedData.muteAudio,
     });
 
     // Read result

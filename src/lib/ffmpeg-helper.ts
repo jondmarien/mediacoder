@@ -11,6 +11,7 @@ export interface VideoConversionOptions {
   bitrate?: string;
   width?: number;
   height?: number;
+  muteAudio?: boolean;
 }
 
 export async function convertVideo(
@@ -31,6 +32,10 @@ export async function convertVideo(
 
     if (options.width && options.height) {
       command = command.size(`${options.width}x${options.height}`);
+    }
+
+    if (options.muteAudio) {
+      command = command.noAudio();
     }
 
     command

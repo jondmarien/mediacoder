@@ -1,12 +1,12 @@
 import MediaConverter from "@/components/media/media-converter";
 import { Button } from "@/components/ui/button";
-import { Github } from "lucide-react";
+import { GitHubIcon } from "@/components/icons";
 
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-background selection:bg-primary/20 leading-relaxed font-sans">
       {/* Navbar */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/60">
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
@@ -24,7 +24,7 @@ export default function Home() {
                 rel="noreferrer"
                 className="text-muted-foreground hover:text-foreground font-medium"
               >
-                <Github className="w-5 h-5 mr-2" />
+                <GitHubIcon className="w-5 h-5 mr-2" />
                 GitHub
               </a>
             </Button>
