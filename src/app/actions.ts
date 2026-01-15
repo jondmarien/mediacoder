@@ -2,13 +2,20 @@
 
 import { processImage, ImageProcessOptions } from "@/lib/image-processing";
 import { v4 as uuidv4 } from "uuid";
-import { rateLimit } from "@/lib/rate-limit";
+import { AsyncRateLimiter } from "@tanstack/pacer";
 import { z } from "zod";
 
-const limiter = rateLimit({
-  interval: 60 * 1000, // 60 seconds
-  uniqueTokenPerInterval: 500, // Max 500 users per second
-});
+// Rate limiter wrapper for the processing function
+const rateLimitedProcessor = new AsyncRateLimiter(
+  async (options: ImageProcessOptions) => {
+    return await processImage(options);
+  },
+  {
+    limit: 10,
+    window: 60 * 1000, // 60 seconds
+    windowType: "sliding",
+  }
+);
 
 const ImageUploadSchema = z.object({
   format: z.enum(["jpeg", "png", "webp", "avif", "tiff"]),
@@ -24,10 +31,6 @@ const ImageUploadSchema = z.object({
 
 export async function uploadAndProcessImage(formData: FormData) {
   try {
-    // Rate Limiting (IP-based ideally, but using static token for demo/MVP)
-    // !! TODO: In real prod, use headers().get('x-forwarded-for')
-    await limiter.check(10, "CACHE_TOKEN"); // 10 requests per minute per token
-
     const file = formData.get("file") as File;
     if (!file) throw new Error("No file uploaded");
 
@@ -65,7 +68,16 @@ export async function uploadAndProcessImage(formData: FormData) {
         : undefined,
     };
 
-    const processedBuffer = await processImage(options);
+    // Execute via rate limiter
+    const processedBuffer = await rateLimitedProcessor.maybeExecute(options);
+
+    if (!processedBuffer) {
+      throw new Error(
+        `Rate limit exceeded. Try again in ${Math.ceil(
+          rateLimitedProcessor.getMsUntilNextWindow() / 1000
+        )}s`
+      );
+    }
 
     return {
       success: true,
