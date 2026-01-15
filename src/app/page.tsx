@@ -1,6 +1,7 @@
 import MediaConverter from "@/components/media/media-converter";
 import { Button } from "@/components/ui/button";
 import { GitHubIcon } from "@/components/icons";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export default function Home() {
   return (
@@ -16,7 +17,8 @@ export default function Home() {
             </div>
             <span className="font-bold text-xl tracking-tight">MediaCoder</span>
           </div>
-          <nav className="flex items-center space-x-4">
+          <nav className="flex items-center space-x-2">
+            <ModeToggle />
             <Button variant="ghost" size="sm" asChild>
               <a
                 href="https://github.com"
