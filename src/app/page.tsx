@@ -21,7 +21,7 @@ export default function Home() {
             <ModeToggle />
             <Button variant="ghost" size="sm" asChild>
               <a
-                href="https://github.com"
+                href="https://github.com/jondmarien/mediacoder"
                 target="_blank"
                 rel="noreferrer"
                 className="text-muted-foreground hover:text-foreground font-medium"
@@ -60,7 +60,7 @@ export default function Home() {
           <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
             Built by{" "}
             <a
-              href="#"
+              href="https://github.com/jondmarien"
               className="font-medium underline underline-offset-4 hover:text-primary transition-colors"
             >
               chron0
