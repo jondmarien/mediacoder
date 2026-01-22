@@ -4,6 +4,7 @@ import { ConfigurationPanel } from "./configuration-panel";
 import { PreviewPanel } from "./preview-panel";
 import { useMediaConverter } from "@/hooks/use-media-converter";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 export default function MediaConverter() {
   const {
@@ -17,6 +18,8 @@ export default function MediaConverter() {
     startConversion,
     isConverting,
   } = useMediaConverter();
+
+  const [isPickingColor, setIsPickingColor] = useState(false);
 
   return (
     <motion.div
@@ -34,12 +37,17 @@ export default function MediaConverter() {
         onConvert={startConversion}
         isConverting={isConverting}
         canConvert={files.some((f) => f.status === "idle")}
+        isPickingColor={isPickingColor}
+        setIsPickingColor={setIsPickingColor}
       />
       <PreviewPanel
         files={files}
         onRemoveFile={removeFile}
         imageSettings={imageSettings}
+        setImageSettings={setImageSettings}
         videoSettings={videoSettings}
+        isPickingColor={isPickingColor}
+        setIsPickingColor={setIsPickingColor}
       />
     </motion.div>
   );

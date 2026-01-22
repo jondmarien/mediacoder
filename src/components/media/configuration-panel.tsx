@@ -21,17 +21,8 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ImageConversionOptions, VideoConversionOptions } from "@/lib/schemas";
 import { FileDropzone } from "./file-dropzone";
-
-interface ConfigurationPanelProps {
-  onFilesAdded: (files: File[]) => void;
-  imageSettings: ImageConversionOptions;
-  setImageSettings: (settings: ImageConversionOptions) => void;
-  videoSettings: VideoConversionOptions;
-  setVideoSettings: (settings: VideoConversionOptions) => void;
-}
-
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Pipette, Loader2 } from "lucide-react";
+import { Button } from "../ui/button";
 
 interface ConfigurationPanelProps {
   onFilesAdded: (files: File[]) => void;
@@ -42,6 +33,8 @@ interface ConfigurationPanelProps {
   onConvert: () => void;
   isConverting: boolean;
   canConvert: boolean;
+  isPickingColor: boolean;
+  setIsPickingColor: (isPicking: boolean) => void;
 }
 
 export function ConfigurationPanel({
@@ -53,6 +46,8 @@ export function ConfigurationPanel({
   onConvert,
   isConverting,
   canConvert,
+  isPickingColor,
+  setIsPickingColor,
 }: ConfigurationPanelProps) {
   return (
     <Card className="h-fit">
@@ -155,6 +150,14 @@ export function ConfigurationPanel({
                       }}
                       maxLength={7}
                     />
+                    <Button
+                      size="icon"
+                      variant={isPickingColor ? "default" : "outline"}
+                      onClick={() => setIsPickingColor(!isPickingColor)}
+                      title="Pick color from preview"
+                    >
+                      <Pipette className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
                 <div className="space-y-2">

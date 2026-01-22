@@ -16,14 +16,20 @@ interface PreviewPanelProps {
   files: ProcessedFile[];
   onRemoveFile: (id: string) => void;
   imageSettings: ImageConversionOptions;
+  setImageSettings: (settings: ImageConversionOptions) => void;
   videoSettings: VideoConversionOptions;
+  isPickingColor: boolean;
+  setIsPickingColor: (isPicking: boolean) => void;
 }
 
 export function PreviewPanel({
   files,
   onRemoveFile,
   imageSettings,
+  setImageSettings,
   videoSettings,
+  isPickingColor,
+  setIsPickingColor,
 }: PreviewPanelProps) {
   const activeFile = files.length > 0 ? files[files.length - 1] : null;
 

@@ -3,23 +3,40 @@ import { ProcessedFile } from "@/lib/types";
 import { useMemo } from "react";
 import { ImageConversionOptions, VideoConversionOptions } from "@/lib/schemas";
 import { Badge } from "@/components/ui/badge";
+import { ImageColorPicker } from "react-image-color-picker";
 
 interface ActivePreviewProps {
   activeFile: ProcessedFile | null;
   imageSettings?: ImageConversionOptions;
   videoSettings?: VideoConversionOptions;
+  isPickingColor?: boolean;
+  setIsPickingColor?: (isPicking: boolean) => void;
+  setImageSettings?: (settings: ImageConversionOptions) => void;
 }
 
 export function ActivePreview({
   activeFile,
   imageSettings,
   videoSettings,
+  isPickingColor,
+  setIsPickingColor,
+  setImageSettings,
 }: ActivePreviewProps) {
   const previewUrl = useMemo(() => {
     if (!activeFile) return null;
     if (activeFile.result) return activeFile.result;
     return URL.createObjectURL(activeFile.file);
   }, [activeFile]);
+
+  const handleColorPick = (color: string) => {
+    if (imageSettings && setImageSettings && setIsPickingColor) {
+      setImageSettings({
+        ...imageSettings,
+        targetColor: color.toUpperCase(),
+      });
+      setIsPickingColor(false);
+    }
+  };
 
   const isIdle =
     activeFile?.status === "idle" || activeFile?.status === "pending";
@@ -44,11 +61,21 @@ export function ActivePreview({
       {activeFile ? (
         <>
           {activeFile.file.type.startsWith("image") ? (
-            <img
-              src={previewUrl || ""}
-              alt="Preview"
-              className="max-w-full max-h-full object-contain"
-            />
+            isPickingColor && previewUrl ? (
+              <div className="w-full h-full flex items-center justify-center cursor-crosshair">
+                <ImageColorPicker
+                  onColorPick={handleColorPick}
+                  imgSrc={previewUrl}
+                  zoom={1}
+                />
+              </div>
+            ) : (
+              <img
+                src={previewUrl || ""}
+                alt="Preview"
+                className="max-w-full max-h-full object-contain"
+              />
+            )
           ) : (
             <div className="text-center">
               <FileVideo className="w-16 h-16 mx-auto mb-2 opacity-50" />
