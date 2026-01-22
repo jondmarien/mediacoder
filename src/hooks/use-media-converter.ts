@@ -14,6 +14,7 @@ import {
 } from "@/lib/schemas";
 import { ProcessedFile } from "@/lib/types";
 import { removeBackground } from "@imgly/background-removal";
+import imageCompression from "browser-image-compression";
 
 export function useMediaConverter() {
   const [files, setFiles] = useState<ProcessedFile[]>([]);
@@ -156,7 +157,12 @@ export function useMediaConverter() {
         setFiles((prev) =>
           prev.map((f) => {
             if (f.file === file) {
-              return { ...f, status: "completed" as const, result: res.data };
+              return {
+                ...f,
+                status: "completed" as const,
+                result: res.data,
+                outputFilename: res.filename,
+              };
             }
             return f;
           }),
@@ -227,9 +233,40 @@ export function useMediaConverter() {
             return;
           }
         } else {
-          // Strict check for images
+          // Strict check for images with compression offer
           if (file.size > MAX_IMAGE_SIZE) {
-            toast.error(`File ${file.name} exceeds 20MB limit.`);
+            toast("File is too large (>20MB)", {
+              description: "Would you like to compress it locally?",
+              action: {
+                label: "Compress",
+                onClick: async () => {
+                  const toastId = toast.loading("Compressing image...");
+                  try {
+                    const options = {
+                      maxSizeMB: 19, // slightly under 20MB
+                      useWebWorker: true,
+                    };
+                    const compressedFile = await imageCompression(
+                      file,
+                      options,
+                    );
+                    toast.dismiss(toastId);
+                    toast.success(
+                      `Compressed to ${(
+                        compressedFile.size /
+                        1024 /
+                        1024
+                      ).toFixed(2)}MB`,
+                    );
+                    addFiles([compressedFile]);
+                  } catch (error) {
+                    console.error(error);
+                    toast.dismiss(toastId);
+                    toast.error("Compression failed");
+                  }
+                },
+              },
+            });
             return;
           }
         }

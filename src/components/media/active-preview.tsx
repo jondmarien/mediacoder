@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 interface ActivePreviewProps {
+  files?: ProcessedFile[]; // Add files prop
   activeFile: ProcessedFile | null;
   imageSettings?: ImageConversionOptions;
   videoSettings?: VideoConversionOptions;
@@ -14,7 +15,21 @@ interface ActivePreviewProps {
   setImageSettings?: (settings: ImageConversionOptions) => void;
 }
 
+const FUNNY_LOADING_MESSAGES = [
+  "Reticulating splines...",
+  "Summoning digital demons...",
+  "Compressing pixels with a hydraulic press...",
+  "Ordering pizza for the CPU...",
+  "Counting backwards from infinity...",
+  "Translating to binary and back...",
+  "Feeding the hamsters...",
+  "Dividing by zero (carefully)...",
+  "Optimizing for 56k modems...",
+  "Searching for the any button...",
+];
+
 export function ActivePreview({
+  files = [],
   activeFile,
   imageSettings,
   videoSettings,
@@ -24,6 +39,34 @@ export function ActivePreview({
 }: ActivePreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imageBitmap, setImageBitmap] = useState<ImageBitmap | null>(null);
+  const [loadingMsg, setLoadingMsg] = useState(FUNNY_LOADING_MESSAGES[0]);
+
+  // Cycle loading messages
+  useEffect(() => {
+    if (activeFile?.status === "processing") {
+      const interval = setInterval(() => {
+        setLoadingMsg(
+          FUNNY_LOADING_MESSAGES[
+            Math.floor(Math.random() * FUNNY_LOADING_MESSAGES.length)
+          ],
+        );
+      }, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [activeFile?.status]);
+
+  // Calculate queue progress
+  const queueStats = useMemo(() => {
+    if (!files.length) return { current: 0, total: 0 };
+    // Total batch is files that are NOT idle (meaning they were added to queue)
+    // Or simpler: Total files in the current "session" of uploads?
+    // Let's just use the current index of the active file relative to the whole list.
+    const index = files.findIndex((f) => f.id === activeFile?.id);
+    return {
+      current: index + 1,
+      total: files.length,
+    };
+  }, [files, activeFile]);
 
   // Load image when activeFile changes
   useEffect(() => {
@@ -184,9 +227,14 @@ export function ActivePreview({
 
           {/* Overlay for Processing */}
           {activeFile.status === "processing" && (
-            <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center backdrop-blur-sm z-30 pointer-events-none">
+            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center backdrop-blur-sm z-30 pointer-events-none text-center p-4">
               <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
-              <p className="text-white font-medium">Processing...</p>
+              <p className="text-lg font-medium text-white mb-1">
+                {loadingMsg}
+              </p>
+              <p className="text-sm text-white/50">
+                Processing file {queueStats.current} of {queueStats.total}
+              </p>
             </div>
           )}
         </>

@@ -41,6 +41,8 @@ interface ConfigurationPanelProps {
   canConvert: boolean;
   isPickingColor: boolean;
   setIsPickingColor: (isPicking: boolean) => void;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
 }
 
 export function ConfigurationPanel({
@@ -54,6 +56,8 @@ export function ConfigurationPanel({
   canConvert,
   isPickingColor,
   setIsPickingColor,
+  activeTab,
+  setActiveTab,
 }: ConfigurationPanelProps) {
   return (
     <Card className="h-fit">
@@ -66,7 +70,7 @@ export function ConfigurationPanel({
       <CardContent className="space-y-6">
         <FileDropzone onFilesAdded={onFilesAdded} />
 
-        <Tabs defaultValue="image" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="image">Image Settings</TabsTrigger>
             <TabsTrigger value="video">Video Settings</TabsTrigger>

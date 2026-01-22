@@ -20,6 +20,19 @@ export default function MediaConverter() {
   } = useMediaConverter();
 
   const [isPickingColor, setIsPickingColor] = useState(false);
+  const [activeTab, setActiveTab] = useState("image");
+
+  const handleFilesAdded = (newFiles: File[]) => {
+    addFiles(newFiles);
+    // Auto-switch tab based on the first file type using startsWith
+    if (newFiles.length > 0) {
+      if (newFiles[0].type.startsWith("video")) {
+        setActiveTab("video");
+      } else if (newFiles[0].type.startsWith("image")) {
+        setActiveTab("image");
+      }
+    }
+  };
 
   return (
     <motion.div
@@ -29,7 +42,7 @@ export default function MediaConverter() {
       className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-6xl mx-auto"
     >
       <ConfigurationPanel
-        onFilesAdded={addFiles}
+        onFilesAdded={handleFilesAdded}
         imageSettings={imageSettings}
         setImageSettings={setImageSettings}
         videoSettings={videoSettings}
@@ -39,6 +52,8 @@ export default function MediaConverter() {
         canConvert={files.some((f) => f.status === "idle")}
         isPickingColor={isPickingColor}
         setIsPickingColor={setIsPickingColor}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
       />
       <PreviewPanel
         files={files}

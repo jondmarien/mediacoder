@@ -50,11 +50,17 @@ export function PreviewPanel({
         ) : (
           <div className="flex flex-col h-full space-y-6">
             <ActivePreview
+              files={files}
               activeFile={activeFile}
               imageSettings={imageSettings}
               videoSettings={videoSettings}
             />
-            <PreviewQueueList files={files} onRemoveFile={onRemoveFile} />
+            <PreviewQueueList
+              files={files}
+              onRemoveFile={onRemoveFile}
+              imageSettings={imageSettings}
+              videoSettings={videoSettings}
+            />
           </div>
         )}
       </CardContent>

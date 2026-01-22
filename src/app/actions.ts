@@ -90,12 +90,19 @@ export async function uploadAndProcessImage(formData: FormData) {
       );
     }
 
+    const originalName = file.name;
+    const nameWithoutExt = originalName.substring(
+      0,
+      originalName.lastIndexOf("."),
+    );
+    const filename = `${nameWithoutExt}.${validatedData.format}`;
+
     return {
       success: true,
       data: `data:image/${
         validatedData.format
       };base64,${processedBuffer.toString("base64")}`,
-      filename: `processed-${uuidv4()}.${validatedData.format}`,
+      filename: filename,
     };
   } catch (error) {
     console.error("Image processing failed:", error);
@@ -176,12 +183,18 @@ export async function uploadAndProcessVideo(formData: FormData) {
     // Cleanup (async, don't wait)
     cleanupFiles([inputPath, outputPath]);
 
+    const nameWithoutExt = originalName.substring(
+      0,
+      originalName.lastIndexOf("."),
+    );
+    const filename = `${nameWithoutExt}.${validatedData.format}`;
+
     return {
       success: true,
       data: `data:video/${validatedData.format};base64,${outputBuffer.toString(
         "base64",
       )}`,
-      filename: `processed-${uniqueId}.${validatedData.format}`,
+      filename: filename,
     };
   } catch (error) {
     // Cleanup on error too
