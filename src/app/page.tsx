@@ -46,7 +46,8 @@ export default function Home() {
               Media Conversion
             </h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Secure, server-side processing. Smart, client-side.
+              Secure, Smart, & Efficient media conversion with server-side
+              processing.
             </p>
           </div>
 
