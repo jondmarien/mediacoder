@@ -14,6 +14,8 @@ export default function MediaConverter() {
     setImageSettings,
     videoSettings,
     setVideoSettings,
+    startConversion,
+    isConverting,
   } = useMediaConverter();
 
   return (
@@ -29,8 +31,16 @@ export default function MediaConverter() {
         setImageSettings={setImageSettings}
         videoSettings={videoSettings}
         setVideoSettings={setVideoSettings}
+        onConvert={startConversion}
+        isConverting={isConverting}
+        canConvert={files.some((f) => f.status === "idle")}
       />
-      <PreviewPanel files={files} onRemoveFile={removeFile} />
+      <PreviewPanel
+        files={files}
+        onRemoveFile={removeFile}
+        imageSettings={imageSettings}
+        videoSettings={videoSettings}
+      />
     </motion.div>
   );
 }

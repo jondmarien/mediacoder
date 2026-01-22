@@ -13,7 +13,7 @@ export interface ImageProcessOptions {
 }
 
 export async function processImage(
-  options: ImageProcessOptions
+  options: ImageProcessOptions,
 ): Promise<Buffer> {
   let pipeline = sharp(options.buffer);
 
@@ -36,6 +36,9 @@ export async function processImage(
     // 2. Iterate RGBA.
     // 3. Set Alpha to 0 if close to target color.
 
+    // Ensure alpha channel exists before raw processing
+    pipeline = pipeline.ensureAlpha();
+
     const { data, info } = await pipeline
       .raw()
       .toBuffer({ resolveWithObject: true });
@@ -49,7 +52,7 @@ export async function processImage(
       data,
       info.channels,
       targetColor,
-      threshold
+      threshold,
     );
 
     pipeline = sharp(newPixelData, {
@@ -93,10 +96,11 @@ function removeBackgroundRaw(
   data: Buffer,
   channels: number,
   target: { r: number; g: number; b: number },
-  threshold: number
+  threshold: number,
 ): Buffer {
-  // Threshold is 0-100, normalize to 0-255 * 3 for distance check approximation or similar
-  const distLimit = (threshold / 100) * Math.sqrt(255 * 255 * 3);
+  // Threshold is 0-100, normalize to 0-441 (max euclidean dist for RGB)
+  // Max distance is sqrt(255^2 * 3) ≈ 441.67
+  const distLimit = (threshold / 100) * 441.67;
 
   for (let i = 0; i < data.length; i += channels) {
     const r = data[i];
@@ -106,18 +110,10 @@ function removeBackgroundRaw(
     const dist = Math.sqrt(
       Math.pow(r - target.r, 2) +
         Math.pow(g - target.g, 2) +
-        Math.pow(b - target.b, 2)
+        Math.pow(b - target.b, 2),
     );
 
-    if (dist < distLimit) {
-      // If handling 3 channels (RGB), we can't add alpha easily in a raw buffer
-      // without reconstructing a 4-channel buffer.
-      // This function assumes input might need conversion to RGBA first which Sharp .raw() provides
-      // if we ensure alpha channel exists.
-
-      // Logic improvement for next iteration:
-      // Ensure pipeline ensures alpha channel before raw export.
-
+    if (dist <= distLimit) {
       if (channels === 4) {
         data[i + 3] = 0; // Set alpha to 0
       }

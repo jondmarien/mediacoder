@@ -30,12 +30,29 @@ interface ConfigurationPanelProps {
   setVideoSettings: (settings: VideoConversionOptions) => void;
 }
 
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+
+interface ConfigurationPanelProps {
+  onFilesAdded: (files: File[]) => void;
+  imageSettings: ImageConversionOptions;
+  setImageSettings: (settings: ImageConversionOptions) => void;
+  videoSettings: VideoConversionOptions;
+  setVideoSettings: (settings: VideoConversionOptions) => void;
+  onConvert: () => void;
+  isConverting: boolean;
+  canConvert: boolean;
+}
+
 export function ConfigurationPanel({
   onFilesAdded,
   imageSettings,
   setImageSettings,
   videoSettings,
   setVideoSettings,
+  onConvert,
+  isConverting,
+  canConvert,
 }: ConfigurationPanelProps) {
   return (
     <Card className="h-fit">
@@ -196,6 +213,29 @@ export function ConfigurationPanel({
             </div>
           </TabsContent>
         </Tabs>
+
+        <div className="pt-2 border-t">
+          <Button
+            onClick={onConvert}
+            disabled={!canConvert || isConverting}
+            className="w-full"
+            size="lg"
+          >
+            {isConverting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Converting...
+              </>
+            ) : (
+              "Convert All"
+            )}
+          </Button>
+          {!canConvert && (
+            <p className="text-center text-xs text-muted-foreground mt-2">
+              Add files to start conversion
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

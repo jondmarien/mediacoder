@@ -10,6 +10,13 @@ import { tmpdir } from "os";
 import * as fs from "fs";
 import { convertVideo } from "@/lib/ffmpeg-helper";
 
+import {
+  ImageConversionSchema,
+  VideoConversionSchema,
+  MAX_IMAGE_SIZE,
+  MAX_VIDEO_SIZE,
+} from "@/lib/schemas";
+
 // Rate limiter wrapper for the processing function
 const rateLimitedProcessor = new AsyncRateLimiter(
   async (options: ImageProcessOptions) => {
@@ -19,19 +26,14 @@ const rateLimitedProcessor = new AsyncRateLimiter(
     limit: 10,
     window: 60 * 1000, // 60 seconds
     windowType: "sliding",
-  }
+  },
 );
 
-const ImageUploadSchema = z.object({
-  format: z.enum(["jpeg", "png", "webp", "avif", "tiff"]),
-  quality: z.number().min(1).max(100).default(80),
+const ImageUploadSchema = ImageConversionSchema.extend({
   width: z.number().optional(),
   height: z.number().optional(),
-  bgRemoveColor: z
-    .string()
-    .regex(/^#[0-9a-fA-F]{6}$/)
-    .optional(),
-  bgRemoveThreshold: z.number().min(0).max(100).default(20),
+  bgRemoveColor: z.string().optional(), // Mapped from targetColor in logic
+  bgRemoveThreshold: z.number().default(10), // Mapped from threshold
 });
 
 export async function uploadAndProcessImage(formData: FormData) {
@@ -56,9 +58,9 @@ export async function uploadAndProcessImage(formData: FormData) {
     const validatedData = ImageUploadSchema.parse(rawData);
 
     // File validation
-    if (file.size > 20 * 1024 * 1024) {
+    if (file.size > MAX_IMAGE_SIZE) {
       // 20MB limit
-      throw new Error("File size exceeds 20MB limit");
+      throw new Error("File size exceeds limit");
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -83,8 +85,8 @@ export async function uploadAndProcessImage(formData: FormData) {
     if (!processedBuffer) {
       throw new Error(
         `Rate limit exceeded. Try again in ${Math.ceil(
-          rateLimitedProcessor.getMsUntilNextWindow() / 1000
-        )}s`
+          rateLimitedProcessor.getMsUntilNextWindow() / 1000,
+        )}s`,
       );
     }
 
@@ -113,10 +115,8 @@ export async function uploadAndProcessImage(formData: FormData) {
 
 // --- Video Processing ---
 
-const VideoUploadSchema = z.object({
-  format: z.enum(["mp4", "webm", "mov", "avi", "mkv"]),
+const VideoUploadSchema = VideoConversionSchema.extend({
   codec: z.string().optional(),
-  muteAudio: z.boolean().default(false),
   // Add more video specific options here (bitrate, etc.)
 });
 
@@ -136,7 +136,7 @@ export async function uploadAndProcessVideo(formData: FormData) {
     };
     const validatedData = VideoUploadSchema.parse(rawData);
 
-    if (file.size > 100 * 1024 * 1024) {
+    if (file.size > MAX_VIDEO_SIZE) {
       // 100MB limit for video
       throw new Error("File size exceeds 100MB video limit");
     }
@@ -179,7 +179,7 @@ export async function uploadAndProcessVideo(formData: FormData) {
     return {
       success: true,
       data: `data:video/${validatedData.format};base64,${outputBuffer.toString(
-        "base64"
+        "base64",
       )}`,
       filename: `processed-${uniqueId}.${validatedData.format}`,
     };

@@ -10,13 +10,21 @@ import {
 import { ProcessedFile } from "@/lib/types";
 import { PreviewQueueList } from "./preview-queue-list";
 import { ActivePreview } from "./active-preview";
+import { ImageConversionOptions, VideoConversionOptions } from "@/lib/schemas";
 
 interface PreviewPanelProps {
   files: ProcessedFile[];
   onRemoveFile: (id: string) => void;
+  imageSettings: ImageConversionOptions;
+  videoSettings: VideoConversionOptions;
 }
 
-export function PreviewPanel({ files, onRemoveFile }: PreviewPanelProps) {
+export function PreviewPanel({
+  files,
+  onRemoveFile,
+  imageSettings,
+  videoSettings,
+}: PreviewPanelProps) {
   const activeFile = files.length > 0 ? files[files.length - 1] : null;
 
   return (
@@ -35,7 +43,11 @@ export function PreviewPanel({ files, onRemoveFile }: PreviewPanelProps) {
           </div>
         ) : (
           <div className="flex flex-col h-full space-y-6">
-            <ActivePreview activeFile={activeFile} />
+            <ActivePreview
+              activeFile={activeFile}
+              imageSettings={imageSettings}
+              videoSettings={videoSettings}
+            />
             <PreviewQueueList files={files} onRemoveFile={onRemoveFile} />
           </div>
         )}
