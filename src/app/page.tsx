@@ -2,6 +2,7 @@ import MediaConverter from "@/components/media/media-converter";
 import { Button } from "@/components/ui/button";
 import { GitHubIcon } from "@/components/icons";
 import { ModeToggle } from "@/components/mode-toggle";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -68,6 +69,12 @@ export default function Home() {
             </a>
             .
           </p>
+          <Link
+            href="/changelog"
+            className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+          >
+            Changelog
+          </Link>
         </div>
       </footer>
     </div>
