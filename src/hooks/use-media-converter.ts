@@ -37,6 +37,7 @@ export function useMediaConverter() {
   // Refs to access latest state inside async worker without re-creating it
   const imageSettingsRef = useRef(imageSettings);
   const videoSettingsRef = useRef(videoSettings);
+  const filesRef = useRef(files); // Add files ref
 
   useEffect(() => {
     imageSettingsRef.current = imageSettings;
@@ -45,6 +46,10 @@ export function useMediaConverter() {
   useEffect(() => {
     videoSettingsRef.current = videoSettings;
   }, [videoSettings]);
+
+  useEffect(() => {
+    filesRef.current = files;
+  }, [files]);
 
   // Monitor files state to turn off isConverting
   useEffect(() => {
@@ -60,6 +65,10 @@ export function useMediaConverter() {
 
   const queue = useAsyncQueuer<File>(
     async (file) => {
+      // Find the file wrapper to get its unique settings
+      const currentFile = filesRef.current.find((f) => f.file === file);
+      if (!currentFile) throw new Error("File not found in queue state");
+
       // Update status to processing
       setFiles((prev) =>
         prev.map((f) => {
@@ -74,8 +83,9 @@ export function useMediaConverter() {
       formData.append("file", file);
 
       const isVideo = file.type.startsWith("video");
-      const vSettings = videoSettingsRef.current;
-      const iSettings = imageSettingsRef.current;
+      // Use file-specific settings, fallback to global refs (though addFiles ensures they exist)
+      const vSettings = currentFile.videoSettings || videoSettingsRef.current;
+      const iSettings = currentFile.imageSettings || imageSettingsRef.current;
 
       if (isVideo) {
         formData.append("format", vSettings.format);
@@ -168,9 +178,12 @@ export function useMediaConverter() {
           }),
         );
         const originalExt = file.name.split(".").pop()?.toUpperCase() || "FILE";
+
+        // Find latest file state to report correct target format
+        const currentFile = filesRef.current.find((f) => f.file === file);
         const targetFormat = file.type.startsWith("video")
-          ? videoSettingsRef.current.format.toUpperCase()
-          : imageSettingsRef.current.format.toUpperCase();
+          ? currentFile?.videoSettings?.format.toUpperCase() || "VIDEO"
+          : currentFile?.imageSettings?.format.toUpperCase() || "IMAGE";
 
         toast.success(
           `Converted from ${originalExt} to ${targetFormat} finished!`,
@@ -278,30 +291,67 @@ export function useMediaConverter() {
 
       const processedFiles = validFiles.map((file) => ({
         file,
-        status: "idle" as const, // Changed from pending to idle
+        status: "idle" as const,
         id: Math.random().toString(36).substring(7),
+        imageSettings: { ...imageSettingsRef.current }, // Copy current settings
+        videoSettings: { ...videoSettingsRef.current }, // Copy current settings
       }));
 
       setFiles((prev) => [...prev, ...processedFiles]);
-
-      // Removed auto-queueing: processedFiles.forEach((f) => queue.addItem(f.file));
     },
-    [queue],
+    [queue], // Dependencies: queue only. Settings via refs.
   );
 
   const removeFile = useCallback((id: string) => {
     setFiles((prev) => prev.filter((f) => f.id !== id));
   }, []);
 
+  const updateFileSettings = useCallback(
+    (
+      id: string,
+      newSettings:
+        | Partial<ImageConversionOptions>
+        | Partial<VideoConversionOptions>,
+    ) => {
+      setFiles((prev) =>
+        prev.map((f) => {
+          if (f.id === id) {
+            // Determine if we are updating image or video settings based on file type or passed key
+            if (f.file.type.startsWith("image")) {
+              return {
+                ...f,
+                imageSettings: {
+                  ...f.imageSettings!,
+                  ...(newSettings as Partial<ImageConversionOptions>),
+                },
+              };
+            } else {
+              return {
+                ...f,
+                videoSettings: {
+                  ...f.videoSettings!,
+                  ...(newSettings as Partial<VideoConversionOptions>),
+                },
+              };
+            }
+          }
+          return f;
+        }),
+      );
+    },
+    [],
+  );
+
   return {
     files,
     addFiles,
     removeFile,
+    updateFileSettings, // Export this
     imageSettings,
     setImageSettings,
     videoSettings,
     setVideoSettings,
-    startConversion, // Expose this
+    startConversion,
     isConverting,
   };
 }

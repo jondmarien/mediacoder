@@ -40,33 +40,49 @@ export function ActivePreview({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imageBitmap, setImageBitmap] = useState<ImageBitmap | null>(null);
   const [loadingMsg, setLoadingMsg] = useState(FUNNY_LOADING_MESSAGES[0]);
+  const [estimatedSeconds, setEstimatedSeconds] = useState(0);
 
-  // Cycle loading messages
+  // Cycle loading messages & Countdown
   useEffect(() => {
     if (activeFile?.status === "processing") {
-      const interval = setInterval(() => {
+      const msgInterval = setInterval(() => {
         setLoadingMsg(
           FUNNY_LOADING_MESSAGES[
             Math.floor(Math.random() * FUNNY_LOADING_MESSAGES.length)
           ],
         );
       }, 2000);
-      return () => clearInterval(interval);
+
+      const timerInterval = setInterval(() => {
+        setEstimatedSeconds((prev) => (prev > 1 ? prev - 1 : 1));
+      }, 1000);
+
+      return () => {
+        clearInterval(msgInterval);
+        clearInterval(timerInterval);
+      };
     }
   }, [activeFile?.status]);
 
-  // Calculate queue progress
+  // Calculate queue progress & Time estimate
   const queueStats = useMemo(() => {
-    if (!files.length) return { current: 0, total: 0 };
-    // Total batch is files that are NOT idle (meaning they were added to queue)
-    // Or simpler: Total files in the current "session" of uploads?
-    // Let's just use the current index of the active file relative to the whole list.
+    if (!files.length) return { current: 0, total: 0, remaining: 0 };
     const index = files.findIndex((f) => f.id === activeFile?.id);
+    const remaining = files.length - index;
     return {
       current: index + 1,
       total: files.length,
+      remaining,
     };
   }, [files, activeFile]);
+
+  // Update estimate when file changes
+  useEffect(() => {
+    if (queueStats.remaining > 0) {
+      // Heuristic: 3-5 seconds per file
+      setEstimatedSeconds(queueStats.remaining * 4);
+    }
+  }, [queueStats.remaining]);
 
   // Load image when activeFile changes
   useEffect(() => {
@@ -234,6 +250,9 @@ export function ActivePreview({
               </p>
               <p className="text-sm text-white/50">
                 Processing file {queueStats.current} of {queueStats.total}
+              </p>
+              <p className="text-xs text-white/40 mt-1">
+                Estimated time: {estimatedSeconds}s
               </p>
             </div>
           )}

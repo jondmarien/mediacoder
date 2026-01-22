@@ -12,6 +12,8 @@ interface PreviewQueueListProps {
   onRemoveFile: (id: string) => void;
   imageSettings: ImageConversionOptions;
   videoSettings: VideoConversionOptions;
+  selectedFileId?: string | null;
+  onSelectFile?: (id: string | null) => void;
 }
 
 export function PreviewQueueList({
@@ -19,6 +21,8 @@ export function PreviewQueueList({
   onRemoveFile,
   imageSettings,
   videoSettings,
+  selectedFileId,
+  onSelectFile,
 }: PreviewQueueListProps) {
   const getDisplayFilename = (file: ProcessedFile) => {
     if (file.status === "completed" && file.outputFilename) {
@@ -31,9 +35,13 @@ export function PreviewQueueList({
       originalName.lastIndexOf("."),
     );
     const isVideo = file.file.type.startsWith("video");
-    const targetExt = isVideo ? videoSettings.format : imageSettings.format;
 
-    return `${nameWithoutExt}.${targetExt}`;
+    // Use file specific settings if available (from creation time), else fallback to current global
+    const fileTargetFormat = isVideo
+      ? file.videoSettings?.format || videoSettings.format
+      : file.imageSettings?.format || imageSettings.format;
+
+    return `${nameWithoutExt}.${fileTargetFormat}`;
   };
 
   const completedFiles = files.filter(
@@ -93,6 +101,8 @@ export function PreviewQueueList({
         <AnimatePresence initial={false} mode="popLayout">
           {files.map((file) => {
             const displayName = getDisplayFilename(file);
+            const isSelected = file.id === selectedFileId;
+
             return (
               <motion.div
                 key={file.id}
@@ -100,13 +110,22 @@ export function PreviewQueueList({
                 animate={{ opacity: 1, x: 0, height: "auto" }}
                 exit={{ opacity: 0, x: 20, height: 0 }}
                 transition={{ duration: 0.2 }}
-                className="flex items-center justify-between p-3 rounded-md bg-muted/40 border text-sm overflow-hidden"
+                onClick={() => onSelectFile?.(file.id)}
+                className={`flex items-center justify-between p-3 rounded-md border text-sm overflow-hidden cursor-pointer transition-colors ${
+                  isSelected
+                    ? "bg-primary/10 border-primary"
+                    : "bg-muted/40 border-transparent hover:bg-muted/60"
+                }`}
               >
                 <div className="flex items-center space-x-3 overflow-hidden">
                   {file.file.type.startsWith("video") ? (
-                    <FileVideo className="w-4 h-4 shrink-0 text-blue-500" />
+                    <FileVideo
+                      className={`w-4 h-4 shrink-0 ${isSelected ? "text-primary" : "text-blue-500"}`}
+                    />
                   ) : (
-                    <FileImage className="w-4 h-4 shrink-0 text-purple-500" />
+                    <FileImage
+                      className={`w-4 h-4 shrink-0 ${isSelected ? "text-primary" : "text-purple-500"}`}
+                    />
                   )}
                   <span
                     className="truncate max-w-[200px] md:max-w-[300px] font-medium"
@@ -130,6 +149,7 @@ export function PreviewQueueList({
                       variant="ghost"
                       className="h-6 w-6 hover:text-primary transition-colors"
                       asChild
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <a href={file.result} download={displayName}>
                         <Download className="w-3 h-3" />
@@ -140,7 +160,10 @@ export function PreviewQueueList({
                     size="icon"
                     variant="ghost"
                     className="h-6 w-6 text-muted-foreground hover:text-destructive transition-colors"
-                    onClick={() => onRemoveFile(file.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemoveFile(file.id);
+                    }}
                   >
                     <X className="w-3 h-3" />
                   </Button>

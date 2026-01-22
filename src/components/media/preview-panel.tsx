@@ -20,6 +20,8 @@ interface PreviewPanelProps {
   videoSettings: VideoConversionOptions;
   isPickingColor: boolean;
   setIsPickingColor: (isPicking: boolean) => void;
+  selectedFileId?: string | null;
+  onSelectFile?: (id: string | null) => void;
 }
 
 export function PreviewPanel({
@@ -30,22 +32,22 @@ export function PreviewPanel({
   videoSettings,
   isPickingColor,
   setIsPickingColor,
+  selectedFileId,
+  onSelectFile,
 }: PreviewPanelProps) {
-  const activeFile = files.length > 0 ? files[files.length - 1] : null;
+  const activeFile =
+    files.find((f) => f.id === selectedFileId) ||
+    (files.length > 0 ? files[files.length - 1] : null);
 
   return (
-    <Card className="h-full min-h-[500px] flex flex-col">
-      <CardHeader>
+    <Card className="h-full flex flex-col overflow-hidden bg-muted/30">
+      <CardHeader className="pb-2">
         <CardTitle>Preview</CardTitle>
-        <CardDescription>
-          Real-time processing status and results.
-        </CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col">
+      <CardContent className="flex-1 min-h-0 flex flex-col gap-4">
         {files.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-lg m-4 min-h-[300px]">
-            <p>No files in queue</p>
-            <p className="text-xs opacity-50">Upload a file to see preview</p>
+          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground dashed-border rounded-lg m-2">
+            <p>Upload files to see preview</p>
           </div>
         ) : (
           <div className="flex flex-col h-full space-y-6">
@@ -54,12 +56,17 @@ export function PreviewPanel({
               activeFile={activeFile}
               imageSettings={imageSettings}
               videoSettings={videoSettings}
+              isPickingColor={isPickingColor}
+              setIsPickingColor={setIsPickingColor}
+              setImageSettings={setImageSettings}
             />
             <PreviewQueueList
               files={files}
               onRemoveFile={onRemoveFile}
               imageSettings={imageSettings}
               videoSettings={videoSettings}
+              selectedFileId={selectedFileId}
+              onSelectFile={onSelectFile}
             />
           </div>
         )}

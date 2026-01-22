@@ -43,6 +43,7 @@ interface ConfigurationPanelProps {
   setIsPickingColor: (isPicking: boolean) => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  selectedFileName?: string;
 }
 
 export function ConfigurationPanel({
@@ -58,14 +59,30 @@ export function ConfigurationPanel({
   setIsPickingColor,
   activeTab,
   setActiveTab,
+  selectedFileName,
 }: ConfigurationPanelProps) {
   return (
     <Card className="h-fit">
       <CardHeader>
-        <CardTitle>Configuration</CardTitle>
-        <CardDescription>
-          Customize your media processing settings.
-        </CardDescription>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle>Configuration</CardTitle>
+            <CardDescription>
+              {selectedFileName ? (
+                <span className="text-primary font-medium">
+                  Editing: {selectedFileName}
+                </span>
+              ) : (
+                "Adjust conversion settings"
+              )}
+            </CardDescription>
+          </div>
+          {selectedFileName && (
+            <div className="px-2 py-1 text-xs font-semibold rounded-full bg-primary/10 text-primary border border-primary/20 animate-in fade-in">
+              Individual File Mode
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         <FileDropzone onFilesAdded={onFilesAdded} />
