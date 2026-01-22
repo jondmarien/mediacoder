@@ -46,6 +46,50 @@ function getChangelogPosts(): ChangelogPost[] {
   );
 }
 
+const components = {
+  h1: (props: any) => (
+    <h1
+      className="mt-8 scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl"
+      {...props}
+    />
+  ),
+  h2: (props: any) => (
+    <h2
+      className="mt-8 scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0"
+      {...props}
+    />
+  ),
+  h3: (props: any) => (
+    <h3
+      className="mt-8 scroll-m-20 text-xl font-semibold tracking-tight"
+      {...props}
+    />
+  ),
+  p: (props: any) => <p className="leading-7 not-first:mt-4" {...props} />,
+  ul: (props: any) => (
+    <ul className="my-4 ml-6 list-disc [&>li]:mt-2" {...props} />
+  ),
+  ol: (props: any) => (
+    <ol className="my-4 ml-6 list-decimal [&>li]:mt-2" {...props} />
+  ),
+  li: (props: any) => <li className="" {...props} />,
+  strong: (props: any) => (
+    <strong className="font-bold text-foreground" {...props} />
+  ),
+  a: (props: any) => (
+    <a
+      className="font-medium text-primary underline underline-offset-4"
+      {...props}
+    />
+  ),
+  blockquote: (props: any) => (
+    <blockquote
+      className="mt-6 border-l-2 border-primary pl-6 italic text-muted-foreground"
+      {...props}
+    />
+  ),
+};
+
 export default function ChangelogPage() {
   const changelogs = getChangelogPosts();
 
@@ -125,8 +169,11 @@ export default function ChangelogPage() {
                         )}
                       </div>
 
-                      <div className="prose dark:prose-invert max-w-none text-muted-foreground leading-relaxed prose-headings:font-semibold prose-headings:tracking-tight prose-li:marker:text-primary">
-                        <MDXRemote source={post.content} />
+                      <div className="text-muted-foreground leading-relaxed">
+                        <MDXRemote
+                          source={post.content}
+                          components={components}
+                        />
                       </div>
                     </div>
                   </div>
