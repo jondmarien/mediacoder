@@ -15,6 +15,8 @@ interface PreviewQueueListProps {
   selectedFileId?: string | null;
   onSelectFile?: (id: string | null) => void;
   isIndividualMode?: boolean;
+  globalImageSettings?: ImageConversionOptions;
+  globalVideoSettings?: VideoConversionOptions;
 }
 
 export function PreviewQueueList({
@@ -25,6 +27,8 @@ export function PreviewQueueList({
   selectedFileId,
   onSelectFile,
   isIndividualMode,
+  globalImageSettings,
+  globalVideoSettings,
 }: PreviewQueueListProps) {
   const getDisplayFilename = (file: ProcessedFile) => {
     if (file.status === "completed" && file.outputFilename) {
@@ -38,10 +42,14 @@ export function PreviewQueueList({
     );
     const isVideo = file.file.type.startsWith("video");
 
-    // Use file specific settings if available (from creation time), else fallback to current global
+    // Use file specific settings if available.
+    // Fallback order: Explicit Global Settings -> Passed effective settings (legacy/safe fallback)
+    const effectiveGlobalImage = globalImageSettings || imageSettings;
+    const effectiveGlobalVideo = globalVideoSettings || videoSettings;
+
     const fileTargetFormat = isVideo
-      ? file.videoSettings?.format || videoSettings.format
-      : file.imageSettings?.format || imageSettings.format;
+      ? file.videoSettings?.format || effectiveGlobalVideo.format
+      : file.imageSettings?.format || effectiveGlobalImage.format;
 
     return `${nameWithoutExt}.${fileTargetFormat}`;
   };
@@ -87,7 +95,7 @@ export function PreviewQueueList({
         <h4 className="text-sm font-medium text-muted-foreground">
           Queue ({files.length})
         </h4>
-        {completedFiles.length > 2 && (
+        {completedFiles.length >= 2 && (
           <Button
             variant="outline"
             size="sm"

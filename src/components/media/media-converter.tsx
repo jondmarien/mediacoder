@@ -119,7 +119,7 @@ export default function MediaConverter() {
       <PreviewPanel
         files={files}
         onRemoveFile={handleRemoveFile}
-        imageSettings={currentImageSettings}
+        imageSettings={currentImageSettings} // This visualizes EFFECTIVE settings for active file activePreview
         setImageSettings={handleSetImageSettings}
         videoSettings={currentVideoSettings}
         isPickingColor={isPickingColor}
@@ -127,6 +127,8 @@ export default function MediaConverter() {
         selectedFileId={selectedFileId}
         onSelectFile={handleSelectFile}
         isIndividualMode={isIndividualMode}
+        globalImageSettings={imageSettings} // Pass TRUE global defaults for queue list fallback
+        globalVideoSettings={videoSettings}
       />
     </motion.div>
   );

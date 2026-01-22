@@ -23,19 +23,23 @@ interface PreviewPanelProps {
   selectedFileId?: string | null;
   onSelectFile?: (id: string | null) => void;
   isIndividualMode?: boolean;
+  globalImageSettings?: ImageConversionOptions;
+  globalVideoSettings?: VideoConversionOptions;
 }
 
 export function PreviewPanel({
   files,
   onRemoveFile,
-  imageSettings,
+  imageSettings, // This is effective settings (for ActivePreview)
   setImageSettings,
-  videoSettings,
+  videoSettings, // This is effective settings
   isPickingColor,
   setIsPickingColor,
   selectedFileId,
   onSelectFile,
   isIndividualMode,
+  globalImageSettings,
+  globalVideoSettings,
 }: PreviewPanelProps) {
   const activeFile =
     files.find((f) => f.id === selectedFileId) ||
@@ -70,6 +74,8 @@ export function PreviewPanel({
               selectedFileId={selectedFileId}
               onSelectFile={onSelectFile}
               isIndividualMode={isIndividualMode}
+              globalImageSettings={globalImageSettings}
+              globalVideoSettings={globalVideoSettings}
             />
           </div>
         )}
