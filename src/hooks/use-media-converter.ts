@@ -13,6 +13,7 @@ import {
   ACCEPTED_VIDEO_TYPES,
 } from "@/lib/schemas";
 import { ProcessedFile } from "@/lib/types";
+import { removeBackground } from "@imgly/background-removal";
 
 export function useMediaConverter() {
   const [files, setFiles] = useState<ProcessedFile[]>([]);
@@ -22,6 +23,7 @@ export function useMediaConverter() {
     format: "webp",
     quality: 80,
     removeBackground: false,
+    autoBackgroundRemoval: false,
     threshold: 10,
     targetColor: "#00FF00",
   });
@@ -82,9 +84,42 @@ export function useMediaConverter() {
         if (!result.success) throw new Error(result.error);
         return result;
       } else {
+        // Log for debugging format issue
+        console.log("Processing image with settings:", iSettings);
+
+        let fileToUpload = file;
+
+        // Handle Auto AI Background Removal (Client-side)
+        if (iSettings.removeBackground && iSettings.autoBackgroundRemoval) {
+          try {
+            // Using public path or default
+            const blob = await (removeBackground as any)(file, {
+              progress: (key: any, current: any, total: any) => {
+                // Optional: could update progress via a side-channel or just let it spin
+              },
+            });
+
+            // Convert blob to file with same name but png type (imgly outputs png/webp)
+            fileToUpload = new File(
+              [blob],
+              file.name.replace(/\.[^/.]+$/, "") + ".png",
+              { type: "image/png" },
+            );
+
+            // We do NOT set 'removeBackground' to true for the server, because we already removed it.
+            // The server will just process format conversion / resizing.
+          } catch (error) {
+            console.error("Auto BG Removal failed:", error);
+            throw new Error("Failed to remove background automatically.");
+          }
+        }
+
+        formData.set("file", fileToUpload); // Update file in formData
         formData.append("format", iSettings.format);
         formData.append("quality", iSettings.quality.toString());
-        if (iSettings.removeBackground) {
+
+        // Only append server-side removal params if we are in MANUAL mode
+        if (iSettings.removeBackground && !iSettings.autoBackgroundRemoval) {
           formData.append("removeBackground", "true");
           formData.append("threshold", iSettings.threshold?.toString() || "10");
           formData.append("targetColor", iSettings.targetColor || "#00FF00");

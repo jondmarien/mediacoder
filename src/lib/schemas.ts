@@ -7,6 +7,7 @@ export const ImageConversionSchema = z.object({
   format: ImageFormatSchema.default("webp"),
   quality: z.number().min(1).max(100).default(80),
   removeBackground: z.boolean().default(false),
+  autoBackgroundRemoval: z.boolean().default(false),
   threshold: z.number().min(0).max(100).default(10).optional(),
   targetColor: z
     .string()

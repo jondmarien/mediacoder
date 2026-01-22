@@ -127,81 +127,129 @@ export function ConfigurationPanel({
             </div>
 
             {imageSettings.removeBackground && (
-              <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
-                <div className="space-y-2">
-                  <Label>Target Color</Label>
-                  <div className="flex items-center gap-2">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <div
-                          className="w-10 h-10 rounded border cursor-pointer shadow-sm"
-                          style={{ backgroundColor: imageSettings.targetColor }}
-                        />
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 border-none shadow-xl">
-                        <Sketch
-                          color={imageSettings.targetColor}
-                          disableAlpha
-                          onChange={(color) =>
+              <div className="grid grid-cols-1 gap-4 animate-in fade-in slide-in-from-top-2">
+                <div className="flex bg-muted p-1 rounded-lg">
+                  <button
+                    className={`flex-1 text-sm py-1.5 rounded-md transition-all ${
+                      imageSettings.autoBackgroundRemoval
+                        ? "bg-background shadow-sm"
+                        : "text-muted-foreground hover:bg-background/50"
+                    }`}
+                    onClick={() =>
+                      setImageSettings({
+                        ...imageSettings,
+                        autoBackgroundRemoval: true,
+                      })
+                    }
+                  >
+                    Auto (AI)
+                  </button>
+                  <button
+                    className={`flex-1 text-sm py-1.5 rounded-md transition-all ${
+                      !imageSettings.autoBackgroundRemoval
+                        ? "bg-background shadow-sm"
+                        : "text-muted-foreground hover:bg-background/50"
+                    }`}
+                    onClick={() =>
+                      setImageSettings({
+                        ...imageSettings,
+                        autoBackgroundRemoval: false,
+                      })
+                    }
+                  >
+                    Manual (Color)
+                  </button>
+                </div>
+
+                {!imageSettings.autoBackgroundRemoval && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Target Color</Label>
+                      <div className="flex items-center gap-2">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <div
+                              className="w-10 h-10 rounded border cursor-pointer shadow-sm"
+                              style={{
+                                backgroundColor: imageSettings.targetColor,
+                              }}
+                            />
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 border-none shadow-xl">
+                            <Sketch
+                              color={imageSettings.targetColor}
+                              disableAlpha
+                              onChange={(color) =>
+                                setImageSettings({
+                                  ...imageSettings,
+                                  targetColor: color.hex.toUpperCase(),
+                                })
+                              }
+                            />
+                          </PopoverContent>
+                        </Popover>
+
+                        <div className="relative flex-1">
+                          <Input
+                            type="text"
+                            className="font-mono uppercase pl-8"
+                            value={imageSettings.targetColor}
+                            onChange={(e) => {
+                              if (/^#[0-9A-F]{0,6}$/i.test(e.target.value)) {
+                                setImageSettings({
+                                  ...imageSettings,
+                                  targetColor: e.target.value,
+                                });
+                              }
+                            }}
+                            maxLength={7}
+                          />
+                          <div
+                            className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-sm border"
+                            style={{
+                              backgroundColor: imageSettings.targetColor,
+                            }}
+                          />
+                        </div>
+
+                        <Button
+                          size="icon"
+                          variant={isPickingColor ? "secondary" : "outline"}
+                          onClick={() => setIsPickingColor(!isPickingColor)}
+                          title="Pick color from preview"
+                          className={
+                            isPickingColor ? "animate-pulse border-primary" : ""
+                          }
+                        >
+                          <Pipette className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Threshold ({imageSettings.threshold}%)</Label>
+                      <div className="pt-2">
+                        <Slider
+                          value={[imageSettings.threshold ?? 10]}
+                          onValueChange={(vals) =>
                             setImageSettings({
                               ...imageSettings,
-                              targetColor: color.hex.toUpperCase(),
+                              threshold: vals[0],
                             })
                           }
+                          max={100}
+                          step={1}
                         />
-                      </PopoverContent>
-                    </Popover>
-
-                    <div className="relative flex-1">
-                      <Input
-                        type="text"
-                        className="font-mono uppercase pl-8"
-                        value={imageSettings.targetColor}
-                        onChange={(e) => {
-                          if (/^#[0-9A-F]{0,6}$/i.test(e.target.value)) {
-                            setImageSettings({
-                              ...imageSettings,
-                              targetColor: e.target.value,
-                            });
-                          }
-                        }}
-                        maxLength={7}
-                      />
-                      <div
-                        className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-sm border"
-                        style={{ backgroundColor: imageSettings.targetColor }}
-                      />
+                      </div>
                     </div>
+                  </div>
+                )}
 
-                    <Button
-                      size="icon"
-                      variant={isPickingColor ? "secondary" : "outline"}
-                      onClick={() => setIsPickingColor(!isPickingColor)}
-                      title="Pick color from preview"
-                      className={
-                        isPickingColor ? "animate-pulse border-primary" : ""
-                      }
-                    >
-                      <Pipette className="h-4 w-4" />
-                    </Button>
+                {imageSettings.autoBackgroundRemoval && (
+                  <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md border flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    AI will automatically detect and remove the background.
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Threshold ({imageSettings.threshold}%)</Label>
-                  <div className="pt-2">
-                    <Slider
-                      value={[imageSettings.threshold || 10]}
-                      onValueChange={(vals) =>
-                        setImageSettings({
-                          ...imageSettings,
-                          threshold: vals[0],
-                        })
-                      }
-                      max={100}
-                      step={1}
-                    />
-                  </div>
-                </div>
+                )}
               </div>
             )}
           </TabsContent>
