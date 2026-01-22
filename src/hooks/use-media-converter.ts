@@ -91,26 +91,46 @@ export function useMediaConverter() {
 
         // Handle Auto AI Background Removal (Client-side)
         if (iSettings.removeBackground && iSettings.autoBackgroundRemoval) {
-          try {
-            // Using public path or default
-            const blob = await (removeBackground as any)(file, {
-              progress: (key: any, current: any, total: any) => {
-                // Optional: could update progress via a side-channel or just let it spin
-              },
-            });
-
-            // Convert blob to file with same name but png type (imgly outputs png/webp)
-            fileToUpload = new File(
-              [blob],
-              file.name.replace(/\.[^/.]+$/, "") + ".png",
-              { type: "image/png" },
+          if (file.type === "image/gif") {
+            toast.warning(
+              "Auto AI background removal does not support GIFs. Skipping.",
             );
+            // Fallthrough to normal upload without processing
+          } else {
+            try {
+              // Using public path or default
+              const blob = await (removeBackground as any)(file, {
+                progress: (key: any, current: any, total: any) => {
+                  // Optional: could update progress via a side-channel or just let it spin
+                },
+              });
 
-            // We do NOT set 'removeBackground' to true for the server, because we already removed it.
-            // The server will just process format conversion / resizing.
-          } catch (error) {
-            console.error("Auto BG Removal failed:", error);
-            throw new Error("Failed to remove background automatically.");
+              // Convert blob to file with same name but png type (imgly outputs png/webp)
+              fileToUpload = new File(
+                [blob],
+                file.name.replace(/\.[^/.]+$/, "") + ".png",
+                { type: "image/png" },
+              );
+
+              // We do NOT set 'removeBackground' to true for the server, because we already removed it.
+              // The server will just process format conversion / resizing.
+            } catch (error) {
+              console.error("Auto BG Removal failed:", error);
+
+              // If specific error, show it
+              if (
+                error instanceof Error &&
+                error.message.includes("Invalid format")
+              ) {
+                toast.error(`Auto BG failed: Unsupported format ${file.type}`);
+              } else {
+                toast.error("Failed to remove background automatically.");
+              }
+              // We stop here or fallthrough?
+              // If it fails, we should probably stop or ask user.
+              // Throwing error stops the queue for this file.
+              throw new Error("Auto BG Removal failed processing this file.");
+            }
           }
         }
 
@@ -141,7 +161,15 @@ export function useMediaConverter() {
             return f;
           }),
         );
-        toast.success(`Processed ${file.name}`);
+        const originalExt = file.name.split(".").pop()?.toUpperCase() || "FILE";
+        const targetFormat = file.type.startsWith("video")
+          ? videoSettingsRef.current.format.toUpperCase()
+          : imageSettingsRef.current.format.toUpperCase();
+
+        toast.success(
+          `Converted from ${originalExt} to ${targetFormat} finished!`,
+          { duration: 4000 },
+        );
       },
       onError: (err, file) => {
         setFiles((prev) =>

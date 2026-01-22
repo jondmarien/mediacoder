@@ -37,7 +37,10 @@ export function PreviewQueueList({
                 ) : (
                   <FileImage className="w-4 h-4 shrink-0 text-purple-500" />
                 )}
-                <span className="truncate max-w-[150px] font-medium">
+                <span
+                  className="truncate max-w-[200px] md:max-w-[300px] font-medium"
+                  title={file.file.name}
+                >
                   {file.file.name}
                 </span>
               </div>

@@ -142,7 +142,7 @@ export function ConfigurationPanel({
                       })
                     }
                   >
-                    Auto (AI)
+                    Auto (IMG.LY SDK)
                   </button>
                   <button
                     className={`flex-1 text-sm py-1.5 rounded-md transition-all ${
@@ -247,7 +247,8 @@ export function ConfigurationPanel({
                 {imageSettings.autoBackgroundRemoval && (
                   <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md border flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    AI will automatically detect and remove the background.
+                    IMG.LY SDK will automatically detect and remove the
+                    background.
                   </div>
                 )}
               </div>
