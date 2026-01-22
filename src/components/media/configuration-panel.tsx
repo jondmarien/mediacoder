@@ -23,6 +23,12 @@ import { ImageConversionOptions, VideoConversionOptions } from "@/lib/schemas";
 import { FileDropzone } from "./file-dropzone";
 import { Pipette, Loader2 } from "lucide-react";
 import { Button } from "../ui/button";
+import Sketch from "@uiw/react-color-sketch";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface ConfigurationPanelProps {
   onFilesAdded: (files: File[]) => void;
@@ -124,37 +130,57 @@ export function ConfigurationPanel({
               <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
                 <div className="space-y-2">
                   <Label>Target Color</Label>
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      type="color"
-                      className="w-12 h-9 p-1 cursor-pointer"
-                      value={imageSettings.targetColor}
-                      onChange={(e) =>
-                        setImageSettings({
-                          ...imageSettings,
-                          targetColor: e.target.value,
-                        })
-                      }
-                    />
-                    <Input
-                      type="text"
-                      className="flex-1 font-mono uppercase"
-                      value={imageSettings.targetColor}
-                      onChange={(e) => {
-                        if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
-                          setImageSettings({
-                            ...imageSettings,
-                            targetColor: e.target.value,
-                          });
-                        }
-                      }}
-                      maxLength={7}
-                    />
+                  <div className="flex items-center gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <div
+                          className="w-10 h-10 rounded border cursor-pointer shadow-sm"
+                          style={{ backgroundColor: imageSettings.targetColor }}
+                        />
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 border-none shadow-xl">
+                        <Sketch
+                          color={imageSettings.targetColor}
+                          disableAlpha
+                          onChange={(color) =>
+                            setImageSettings({
+                              ...imageSettings,
+                              targetColor: color.hex.toUpperCase(),
+                            })
+                          }
+                        />
+                      </PopoverContent>
+                    </Popover>
+
+                    <div className="relative flex-1">
+                      <Input
+                        type="text"
+                        className="font-mono uppercase pl-8"
+                        value={imageSettings.targetColor}
+                        onChange={(e) => {
+                          if (/^#[0-9A-F]{0,6}$/i.test(e.target.value)) {
+                            setImageSettings({
+                              ...imageSettings,
+                              targetColor: e.target.value,
+                            });
+                          }
+                        }}
+                        maxLength={7}
+                      />
+                      <div
+                        className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-sm border"
+                        style={{ backgroundColor: imageSettings.targetColor }}
+                      />
+                    </div>
+
                     <Button
                       size="icon"
-                      variant={isPickingColor ? "default" : "outline"}
+                      variant={isPickingColor ? "secondary" : "outline"}
                       onClick={() => setIsPickingColor(!isPickingColor)}
                       title="Pick color from preview"
+                      className={
+                        isPickingColor ? "animate-pulse border-primary" : ""
+                      }
                     >
                       <Pipette className="h-4 w-4" />
                     </Button>

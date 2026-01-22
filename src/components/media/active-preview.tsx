@@ -3,6 +3,7 @@ import { ProcessedFile } from "@/lib/types";
 import { useMemo } from "react";
 import { ImageConversionOptions, VideoConversionOptions } from "@/lib/schemas";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import { ImageColorPicker } from "react-image-color-picker";
 
 interface ActivePreviewProps {
@@ -30,11 +31,15 @@ export function ActivePreview({
 
   const handleColorPick = (color: string) => {
     if (imageSettings && setImageSettings && setIsPickingColor) {
+      const hexColor = color.toUpperCase();
       setImageSettings({
         ...imageSettings,
-        targetColor: color.toUpperCase(),
+        targetColor: hexColor,
       });
       setIsPickingColor(false);
+
+      navigator.clipboard.writeText(hexColor);
+      toast.success(`Color copied: ${hexColor}`);
     }
   };
 
