@@ -22,6 +22,7 @@ interface PreviewPanelProps {
   setIsPickingColor: (isPicking: boolean) => void;
   selectedFileId?: string | null;
   onSelectFile?: (id: string | null) => void;
+  isIndividualMode?: boolean;
 }
 
 export function PreviewPanel({
@@ -34,6 +35,7 @@ export function PreviewPanel({
   setIsPickingColor,
   selectedFileId,
   onSelectFile,
+  isIndividualMode,
 }: PreviewPanelProps) {
   const activeFile =
     files.find((f) => f.id === selectedFileId) ||
@@ -67,6 +69,7 @@ export function PreviewPanel({
               videoSettings={videoSettings}
               selectedFileId={selectedFileId}
               onSelectFile={onSelectFile}
+              isIndividualMode={isIndividualMode}
             />
           </div>
         )}

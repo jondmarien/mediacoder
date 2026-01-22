@@ -23,32 +23,52 @@ export default function MediaConverter() {
   const [isPickingColor, setIsPickingColor] = useState(false);
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("image");
+  const [isIndividualMode, setIsIndividualMode] = useState(false);
 
-  const selectedFile = files.find((f) => f.id === selectedFileId) || null;
+  // Clear selection when mode is disabled
+  const handleModeChange = (enabled: boolean) => {
+    setIsIndividualMode(enabled);
+    if (!enabled) setSelectedFileId(null);
+  };
+
+  const selectedFile = isIndividualMode
+    ? files.find((f) => f.id === selectedFileId) || null
+    : null;
+
+  // Derived settings to pass to configuration panel
+  // If a file is selected, show ITS settings (merged with global for completeness). Otherwise global defaults.
+  // Note: We intentionally fallback to imageSettings (global) if selectedFile.imageSettings is missing (inheritance).
+  // But for the UI controls, we want the "effective" settings.
+  const currentImageSettings = selectedFile?.imageSettings || imageSettings;
+  const currentVideoSettings = selectedFile?.videoSettings || videoSettings;
 
   const handleSetImageSettings = (newSettings: any) => {
-    if (selectedFileId) {
-      // Update specific file
-      updateFileSettings(selectedFileId, newSettings);
+    if (selectedFileId && isIndividualMode) {
+      // Forking: Take global defaults, merge with any existing file settings, then apply new.
+      // We must fully materialize the settings object on the file now.
+      const merged = {
+        ...imageSettings,
+        ...(selectedFile?.imageSettings || {}),
+        ...newSettings,
+      };
+      updateFileSettings(selectedFileId, merged);
     } else {
-      // Update global defaults
       setImageSettings(newSettings);
     }
   };
 
   const handleSetVideoSettings = (newSettings: any) => {
-    if (selectedFileId) {
-      updateFileSettings(selectedFileId, newSettings);
+    if (selectedFileId && isIndividualMode) {
+      const merged = {
+        ...videoSettings,
+        ...(selectedFile?.videoSettings || {}),
+        ...newSettings,
+      };
+      updateFileSettings(selectedFileId, merged);
     } else {
       setVideoSettings(newSettings);
     }
   };
-
-  // Derived settings to pass to configuration panel
-  // If a file is selected, show ITS settings. Otherwise global defaults.
-  // Note: We need to ensure we merge with defaults if file settings are partial, but they are initialized fully in useMediaConverter.
-  const currentImageSettings = selectedFile?.imageSettings || imageSettings;
-  const currentVideoSettings = selectedFile?.videoSettings || videoSettings;
 
   const handleFilesAdded = (newFiles: File[]) => {
     addFiles(newFiles);
@@ -65,6 +85,11 @@ export default function MediaConverter() {
   const handleRemoveFile = (id: string) => {
     removeFile(id);
     if (selectedFileId === id) setSelectedFileId(null);
+  };
+
+  const handleSelectFile = (id: string | null) => {
+    if (!isIndividualMode && id) return; // Prevent selection if mode is off
+    setSelectedFileId(id);
   };
 
   return (
@@ -88,6 +113,8 @@ export default function MediaConverter() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         selectedFileName={selectedFile?.file.name}
+        isIndividualMode={isIndividualMode}
+        onToggleMode={handleModeChange}
       />
       <PreviewPanel
         files={files}
@@ -98,7 +125,8 @@ export default function MediaConverter() {
         isPickingColor={isPickingColor}
         setIsPickingColor={setIsPickingColor}
         selectedFileId={selectedFileId}
-        onSelectFile={setSelectedFileId}
+        onSelectFile={handleSelectFile}
+        isIndividualMode={isIndividualMode}
       />
     </motion.div>
   );

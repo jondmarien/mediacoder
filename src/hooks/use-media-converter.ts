@@ -293,8 +293,7 @@ export function useMediaConverter() {
         file,
         status: "idle" as const,
         id: Math.random().toString(36).substring(7),
-        imageSettings: { ...imageSettingsRef.current }, // Copy current settings
-        videoSettings: { ...videoSettingsRef.current }, // Copy current settings
+        // Settings intentionally undefined to inherit from global until overridden
       }));
 
       setFiles((prev) => [...prev, ...processedFiles]);

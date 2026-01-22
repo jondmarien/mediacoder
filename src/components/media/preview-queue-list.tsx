@@ -14,6 +14,7 @@ interface PreviewQueueListProps {
   videoSettings: VideoConversionOptions;
   selectedFileId?: string | null;
   onSelectFile?: (id: string | null) => void;
+  isIndividualMode?: boolean;
 }
 
 export function PreviewQueueList({
@@ -23,6 +24,7 @@ export function PreviewQueueList({
   videoSettings,
   selectedFileId,
   onSelectFile,
+  isIndividualMode,
 }: PreviewQueueListProps) {
   const getDisplayFilename = (file: ProcessedFile) => {
     if (file.status === "completed" && file.outputFilename) {
@@ -101,7 +103,7 @@ export function PreviewQueueList({
         <AnimatePresence initial={false} mode="popLayout">
           {files.map((file) => {
             const displayName = getDisplayFilename(file);
-            const isSelected = file.id === selectedFileId;
+            const isSelected = isIndividualMode && file.id === selectedFileId;
 
             return (
               <motion.div
@@ -110,11 +112,15 @@ export function PreviewQueueList({
                 animate={{ opacity: 1, x: 0, height: "auto" }}
                 exit={{ opacity: 0, x: 20, height: 0 }}
                 transition={{ duration: 0.2 }}
-                onClick={() => onSelectFile?.(file.id)}
-                className={`flex items-center justify-between p-3 rounded-md border text-sm overflow-hidden cursor-pointer transition-colors ${
+                onClick={() => isIndividualMode && onSelectFile?.(file.id)}
+                className={`flex items-center justify-between p-3 rounded-md border text-sm overflow-hidden transition-colors ${
+                  isIndividualMode
+                    ? "cursor-pointer hover:bg-muted/60"
+                    : "cursor-default"
+                } ${
                   isSelected
                     ? "bg-primary/10 border-primary"
-                    : "bg-muted/40 border-transparent hover:bg-muted/60"
+                    : "bg-muted/40 border-transparent"
                 }`}
               >
                 <div className="flex items-center space-x-3 overflow-hidden">

@@ -44,6 +44,8 @@ interface ConfigurationPanelProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   selectedFileName?: string;
+  isIndividualMode?: boolean;
+  onToggleMode?: (enabled: boolean) => void;
 }
 
 export function ConfigurationPanel({
@@ -60,28 +62,37 @@ export function ConfigurationPanel({
   activeTab,
   setActiveTab,
   selectedFileName,
+  isIndividualMode,
+  onToggleMode,
 }: ConfigurationPanelProps) {
   return (
     <Card className="h-fit">
       <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
+        <div className="flex justify-between items-start">
+          <div className="space-y-1">
             <CardTitle>Configuration</CardTitle>
             <CardDescription>
-              {selectedFileName ? (
-                <span className="text-primary font-medium">
+              {isIndividualMode && selectedFileName ? (
+                <span className="text-primary font-medium block">
                   Editing: {selectedFileName}
                 </span>
+              ) : isIndividualMode ? (
+                "Select a file to edit settings"
               ) : (
-                "Adjust conversion settings"
+                "Adjust global settings for all files"
               )}
             </CardDescription>
           </div>
-          {selectedFileName && (
-            <div className="px-2 py-1 text-xs font-semibold rounded-full bg-primary/10 text-primary border border-primary/20 animate-in fade-in">
-              Individual File Mode
-            </div>
-          )}
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="mode-toggle" className="text-xs font-semibold">
+              Single File Mode
+            </Label>
+            <Switch
+              id="mode-toggle"
+              checked={isIndividualMode}
+              onCheckedChange={onToggleMode}
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
